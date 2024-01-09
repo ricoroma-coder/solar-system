@@ -2,8 +2,53 @@ import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/thr
 
 
 let scene = new THREE.Scene()
+let isDragging = false
+let previousMousePosition = {
+    x: 0,
+    y: 0
+}
 
-let backgroundGeometry = new THREE.PlaneGeometry(100, 100, 100)
+document.addEventListener('mousedown', function (event) {
+    isDragging = true
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    }
+})
+
+document.addEventListener('mouseup', function () {
+    isDragging = false
+})
+
+document.addEventListener('mousemove', function (event) {
+    if (!isDragging) return
+
+    let deltaMove = {
+        x: event.clientX - previousMousePosition.x,
+        y: event.clientY - previousMousePosition.y
+    }
+
+    scene.rotation.x += deltaMove.y * 0.005
+    scene.rotation.y += deltaMove.x * 0.005
+    previousMousePosition = {
+        x: event.clientX,
+        y: event.clientY
+    }
+})
+
+document.addEventListener('wheel', function (event) {
+    let zoomFactor = 0.1;
+    let zoomDirection = event.deltaY > 0 ? 1 : -1
+
+    camera.position.z += zoomDirection * zoomFactor
+    if (camera.position.z < 1)
+        camera.position.z = 1
+
+    if (camera.position.z > 20)
+        camera.position.z = 20
+})
+
+let backgroundGeometry = new THREE.SphereGeometry(100, 32, 32)
 let backgroundMaterial = new THREE.MeshBasicMaterial({
     map: new THREE.TextureLoader().load('/static/img/space.jpg'),
     side: THREE.DoubleSide,
@@ -13,12 +58,11 @@ backgroundMaterial.map.wrapS = THREE.RepeatWrapping
 backgroundMaterial.map.wrapT = THREE.RepeatWrapping
 backgroundMaterial.map.repeat.set(10, 10)
 let background = new THREE.Mesh(backgroundGeometry, backgroundMaterial)
-background.position.z = -10
 scene.add(background)
+background.position.set(-21, -21, -21)
 
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = 10
-camera.position.y = 2
 
 let renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -50,7 +94,7 @@ let scaleFactors = { // dados reais no comentário, porém planetas menores fica
     Earth: 0.1,      // 0.1 Diâmetro da Terra (referência)
     Mars: 0.07,      // 0.07 vezes o diâmetro da Terra
     Jupiter: 1,      // 2 vezes o diâmetro da Terra
-    Saturn: 0.8,     // 1.7 vezes o diâmetro da Terra
+    Saturn: 0.65,     // 1.7 vezes o diâmetro da Terra
     Uranus: 0.3,     // 0.8 vezes o diâmetro da Terra
     Neptune: 0.25    // 0.75 vezes o diâmetro da Terra
 }
@@ -66,7 +110,7 @@ planetData.forEach(function(planetInfo) {
     scene.add(planet)
 
     if (planetInfo.name == 'Saturn') {
-        let ringGeometry = new THREE.RingGeometry(1.5, 1, 32)
+        let ringGeometry = new THREE.RingGeometry(1.25, 0.9, 32)
         let ringMaterial = new THREE.MeshBasicMaterial({ color: 0xbbbbbb, side: THREE.DoubleSide })
         let ring = new THREE.Mesh(ringGeometry, ringMaterial)
         planet.add(ring)
